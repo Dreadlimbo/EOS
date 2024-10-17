@@ -1,0 +1,34 @@
+# Use the official Node.js image (non-Alpine) as the base image
+FROM node:18
+
+# Set the working directory inside the container
+WORKDIR /usr/src/app
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install dependencies, including Prisma
+RUN npm install --production --legacy-peer-deps
+
+# Copy the rest of the application files
+COPY . .
+
+# Copy .env file if it's in the root directory
+COPY .env .env
+
+# Prisma specific steps:
+# 1. Generate the Prisma Client
+RUN npx prisma generate
+
+# 2. Optionally run Prisma migrations if needed
+# RUN npx prisma migrate deploy
+
+# Build the TypeScript app (if applicable)
+RUN npm run build
+
+# Expose the port from environment variable
+ARG PORT=3000
+EXPOSE ${PORT}
+
+# Run the application
+CMD ["npm", "run", "start:prod"]

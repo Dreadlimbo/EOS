@@ -1,0 +1,99 @@
+# ServiceAccount for User Management Microservice
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: user-management-sa
+  namespace: default
+
+---
+
+# Role for accessing necessary Kubernetes resources
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: user-management-role
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "services"]
+    verbs: ["get", "list", "create", "update", "delete"]
+
+---
+
+# RoleBinding to bind the ServiceAccount to the Role
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: user-management-binding
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: user-management-sa
+    namespace: default
+roleRef:
+  kind: Role
+  name: user-management-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+# Deployment for the User Management Microservice
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-management-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-management
+  template:
+    metadata:
+      labels:
+        app: user-management
+    spec:
+      serviceAccountName: user-management-sa
+      containers:
+      - name: user-management
+        image: <image_path>
+        ports:
+        - containerPort: 3002  # Changed to 3002
+        env:
+        - name: DATABASE_URL
+          value: "<*****>"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: user-management-secret
+              key: jwtSecret
+      imagePullSecrets:
+      - name: yourSecret
+
+---
+
+# Service for exposing User Management Microservice internally
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-management-service
+  namespace: default
+spec:
+  selector:
+    app: user-management
+  ports:
+    - protocol: TCP
+      port: 80  # External service port
+      targetPort: 3002  # Updated to match container port
+  type: ClusterIP
+
+---
+
+# Secret for sensitive data (e.g., JWT Secret)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: user-management-secret
+  namespace: default
+type: Opaque
+data:
+  jwtSecret: <****> # Base64 encoded JWT secret
