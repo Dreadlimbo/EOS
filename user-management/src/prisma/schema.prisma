@@ -1,0 +1,23 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-arm64-openssl-3.0.x"]
+}
+
+
+
+
+model User {
+  id        String  @id @default(uuid()) @map("_id")
+  username  String
+  email     String  @unique
+  password  String
+  role      String  // 'admin', 'user', etc.
+  isEmailVerified Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
