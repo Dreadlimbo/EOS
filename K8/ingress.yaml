@@ -1,0 +1,51 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: eos-ingress
+  namespace: default
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+spec:
+  rules:
+    - host: ""  # For NodePort or localhost access without a domain name
+      http:
+        paths:
+          # User Management Service Paths
+          - path: /users
+            pathType: Prefix
+            backend:
+              service:
+                name: user-management-service
+                port:
+                  number: 80
+          - path: /users/email/
+            pathType: Prefix
+            backend:
+              service:
+                name: user-management-service
+                port:
+                  number: 80
+
+          # Auth Service Paths
+          - path: /auth/signup
+            pathType: Prefix
+            backend: 
+              service:
+                name: auth-service
+                port:
+                  number: 80
+          - path: /auth/signin
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 80
+          - path: /auth/verify-email/
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 80
